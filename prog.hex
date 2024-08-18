@@ -1,0 +1,54 @@
+// Sample picoRISC program
+// n = 8 bits, Isize = 12+n = 20 bits
+// format: 4b opcode, 4b %d, 4b %s, 8b immediate or address
+
+// x'= ax+by+c=1x+2y+100;
+// y'= dx+ey+f=2x+1y+50;
+// w'= gx+hy+i=1x+1y+2;
+// x_out=x'/w';  y_out=y'/w';
+
+//x1,x2 to save image width and length
+//x3,x4 to save Original coordinates x,y
+//x5,x6 to save Transformed coordinates x',y'
+//x7 to save w'
+//x8,x9 used as Temporary register
+//x11 ram address
+//x12 x13 for x,y address
+
+
+                                                              //28
+// HEX /////////// BINARY /////////////// ASSEMBLER ///////////////////////
+3010A     //20'b0011 0000 0001 00001010//ADDI %0, %1, 10;    LOAD width to x1                          //0
+3020A     //20'b0011 0000 0010 00001010//ADDI %0, %2, 10;    LOAD length to x2                           //1
+30B00     //20'b0011 0000 1011 00000000//ADDI %0, %11, 0;  ram address=0// RAM address initialization	  //2
+30D00     //20'b0011 0000 1101 00000000//ADDI %0, %13, 0; y=0 to x13// y initial value                    //3
+30C00     //20'b0011 0000 1100 00000000//ADDI %0, %12, 0; x=0 to x12   // x initial value/loop_y           //4
+8B300     //20'b1000 1011 0011 00000000//LW1 x11,x3,0;   //Calculating the address /loop_x                 //5
+9B300     //20'b1001 1011 0011 00000000//LW2 x11,x3,0;  // Load x value from RAM address x11 to x3          //6
+8B401     //20'b1000 1011 0100 00000001//LW1 x11,x4,1;  //Calculating the address                            //7
+9B401     //20'b1001 1011 0100 00000001//LW2 x11,x4,1 ; // Load y value from RAM address x11+1 to x4         //8
+43801     //20'b0100 0011 1000 00000001//MULI %3, %8, 1;  1*x save to x8                              //9
+44902     //20'b0100 0100 1001 00000010//MULI %4, %9, 2;  2*y save to x9                           //10
+29800     //20'b0010 1001 1000 00000000//ADD %8, %8, %9;  x + 2y save to x8                        //11
+38564     //20'b0011 1000 0101 01100100// ADDI %8, %5, 100;  x + 2y +100 save to x5                    //12
+43802     //20'b0100 0011 1000 00000010// MULI %3, %8, 2;  2*x save to x8                           //13
+44901     //20'b0100 0100 1001 00000001// MULI %4, %9, 1;  y save to x9                             //14
+29800     //20'b0010 1001 1000 00000000// ADD %8, %8, %9;  2*x + 1*y save to x8                         //15
+38632     //20'b0011 1000 0110 00110010// ADDI %8, %6, 50; 2*x + 1*y +50 save to x6                     //16
+43801     //20'b0100 0011 1000 00000001// MULI %3, %8, 1;  1*x save to x8                            //17
+44901     //20'b0100 0100 1001 00000001// MULI %4, %9, 1;  1*y save to x9                              //18
+29800     //20'b0010 1001 1000 00000000// ADD %8, %8, %9;  1*x + 1*y save to x8                         //19
+38702     //20'b0011 1000 0111 00000010// ADDI %8, %7, 2; 1*x +1*y +2 save to x7                     //20
+57500     //20'b0101 0111 0101 00000000// DIVIDED %5,%5, %7 ; x_out=x'/w' save to x5                //21
+57600     //20'b0101 0111 0110 00000000// DIVIDED %6,%6, %7 ; y_out=y'/w' save to x6               //22
+AB500     //20'b1010 1011 0101 00000000// STORE x11, x5, 0;  // Store data in x5 to address in x11         //23
+AB601     //20'b1010 1011 0110 00000001// STORE x11, x6, 1;  // Store data in x6 to address in x11+1         //24
+3BB02     //20'b0011 1011 1011 00000010// ADDI x11, x11, 2;  // updata ram address                            //25
+3CC01     //20'b0011 1100 1100 00000001// ADDI %12,%12, 1;x=x+1                                        //26
+BC105     //20'b1011 1100 0001 00000101// BLT  %12, %1, 5;  if x<10,branch to loop_x			      //27
+3DD01     //20'b0011 1101 1101 00000001// ADDI %13, %13,1;y=y+1                                      //28
+BD204     //20'b1011 1101 0010 00000100// BLT  %13, %2, 4;  if y<10,branch to loop_y               //29
+60000     //20'b0110 0000 0000 00000000// show %-, %-, 0;      output                       //30
+
+
+
